@@ -1,9 +1,9 @@
-tensorflow
-keras
-pandas
+torch
+torchvision
 numpy
-jupyter
-notebook
-tqdm
-opencv-contrib-python
+pandas
 scikit-learn
+pillow
+tqdm
+notebook
+opencv-contrib-python
