@@ -7,3 +7,4 @@ pillow
 tqdm
 notebook
 opencv-contrib-python
+opencv-python
