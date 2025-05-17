@@ -1,15 +1,11 @@
-from flask import Flask
-from flask_socketio import SocketIO, emit
+from flask import Flask, Response, render_template
 import cv2
 import torch
+from torchvision import transforms
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
-import numpy as np
-import base64
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 class EmotionCNN(nn.Module):
     def __init__(self, version=1):
@@ -130,74 +126,62 @@ transform = transforms.Compose([
 # Labels
 labels = ['Anger', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
-# Face detector
+# Initialize webcam
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Webcam (0 = default camera), CAP_DSHOW = faster init on Windows
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-camera_active = False  # Track if the camera is active
-
-def detect_emotion():
-    global camera_active
-    while camera_active:
+def generate_frames():
+    while True:
         ret, frame = cap.read()
         if not ret:
-            continue
-
-        # Resize frame to 640x480 for faster processing
-        frame = cv2.resize(frame, (640, 480))
+            break
+            
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-        if len(faces) == 0:
-            emotion_data = {"emotion": "No face detected", "confidence": 0.0}
-        else:
-            for (x, y, w, h) in faces:
-                # Draw a rectangle around the face
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        for (x, y, w, h) in faces:
+            roi = gray[y:y+h, x:x+w]
+            roi_color = frame[y:y+h, x:x+w]
+            
+            # Preprocess and predict
+            img = cv2.resize(roi, (48, 48))
+            img_tensor = transform(img).unsqueeze(0).to(device)
+            
+            with torch.no_grad():
+                probs_sum = torch.zeros(7, device=device)
+                for model in models:
+                    logits = model(img_tensor)
+                    probs = F.softmax(logits, dim=1).squeeze()
+                    probs_sum += probs
+                avg_probs = probs_sum / len(models)
+                pred_idx = torch.argmax(avg_probs).item()
+                confidence = avg_probs[pred_idx].item()
+            
+            # Draw annotations
+            emotion = labels[pred_idx]
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.putText(frame, f"{emotion}", 
+                       (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
+                       (0, 0, 255), 2)
 
-                roi = gray[y:y+h, x:x+w]
+        # Encode frame as JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-                try:
-                    img = cv2.resize(roi, (48, 48))
-                except:
-                    continue
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-                img_tensor = transform(img).unsqueeze(0).to(device)
-
-                # Predict using ensemble
-                with torch.no_grad():
-                    probs_sum = torch.zeros(7, device=device)
-                    for model in models:
-                        logits = model(img_tensor)
-                        probs = F.softmax(logits, dim=1).squeeze()
-                        probs_sum += probs
-                    avg_probs = probs_sum / len(models)
-                    pred_idx = torch.argmax(avg_probs).item()
-                    confidence = avg_probs[pred_idx].item()
-                    emotion = labels[pred_idx]
-
-                emotion_data = {"emotion": emotion, "confidence": round(confidence, 2)}
-                break  # Process only the first face detected
-
-        # Encode frame as Base64
-        _, buffer = cv2.imencode('.jpg', frame)
-        frame_base64 = base64.b64encode(buffer).decode('utf-8')
-
-        # Emit both the frame and emotion data
-        socketio.emit('update', {"frame": frame_base64, "emotion": emotion_data})
-
-@socketio.on('start_camera')
-def handle_start_camera():
-    global camera_active
-    if not camera_active:
-        camera_active = True
-        socketio.start_background_task(detect_emotion)
-
-@socketio.on('stop_camera')
-def handle_stop_camera():
-    global camera_active
-    camera_active = False
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
