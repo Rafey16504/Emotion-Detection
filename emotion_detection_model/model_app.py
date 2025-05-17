@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 import numpy as np
 import base64
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -199,5 +200,6 @@ def handle_stop_camera():
     global camera_active
     camera_active = False
 
+port = int(os.environ.get("PORT", 5000))
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=port)

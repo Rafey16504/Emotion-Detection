@@ -10,7 +10,7 @@ const CameraPage: React.FC = () => {
   const [cameraActive, setCameraActive] = useState<boolean>(false);
 
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const socket = io("https://emotion-detection-rbzg.onrender.com");
 
     socket.on(
       "update",
@@ -30,13 +30,13 @@ const CameraPage: React.FC = () => {
   }, []);
 
   const startCamera = () => {
-    const socket = io("http://localhost:5000");
+    const socket = io("https://emotion-detection-rbzg.onrender.com");
     socket.emit("start_camera");
     setCameraActive(true);
   };
 
   const stopCamera = () => {
-    const socket = io("http://localhost:5000");
+    const socket = io("https://emotion-detection-rbzg.onrender.com");
     socket.emit("stop_camera");
     setCameraActive(false);
     setFrame(null);
