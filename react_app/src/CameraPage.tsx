@@ -17,6 +17,7 @@ const Detection = () => {
       reconnectionDelay: 1000,
     });
 
+
     socketRef.current.on("predictions", (data: any) => {
       setPredictions(data);
     });
