@@ -13,7 +13,7 @@ import numpy as np
 class EmotionCNN(nn.Module):
     def __init__(self, version=1):
         super(EmotionCNN, self).__init__()
-        if version == 3:
+        if version == 2:
             self.conv_layers = nn.Sequential(
                 nn.Conv2d(1, 64, 3, padding=1),
                 nn.BatchNorm2d(64),
@@ -42,6 +42,53 @@ class EmotionCNN(nn.Module):
             self.fc_layers = nn.Sequential(
                 nn.Flatten(),
                 nn.Linear(512 * 3 * 3, 256),
+                nn.BatchNorm1d(256),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+
+                nn.Linear(256, 128),
+                nn.BatchNorm1d(128),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+
+                nn.Linear(128, 7)
+            )
+        elif version == 3:
+            self.conv_layers = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.1),
+
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.1),
+
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.1),
+
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.1),
+
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.1)
+        )
+
+            self.fc_layers = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(512 * 1 * 1, 256),
                 nn.BatchNorm1d(256),
                 nn.ReLU(),
                 nn.Dropout(0.3),
@@ -109,7 +156,7 @@ class EmotionCNN(nn.Module):
 # Load models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_configs = [("emotionDetector_1.pth", 1), ("emotionDetector_2.pth", 3)]
+model_configs = [("emotionDetector_1.pth", 1), ("emotionDetector_2.pth", 2), ("emotionDetector_3.pth", 3)]
 models = []
 for path, version in model_configs:
     model = EmotionCNN(version).to(device)

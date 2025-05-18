@@ -1,17 +1,17 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomeScreen from './HomeScreen';
-import CameraPage from './CameraPage';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Home from './Home';
+import Detection from './Detection';
 
-const App: React.FC = () => {
+function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomeScreen />} />
-        <Route path="/camera" element={<CameraPage />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/detection" element={<Detection />} />
       </Routes>
     </Router>
   );
-};
+}
 
 export default App;
