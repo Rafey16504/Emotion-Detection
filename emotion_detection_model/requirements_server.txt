@@ -1,0 +1,8 @@
+flask
+flask-socketio
+torch
+torchvision
+opencv-python
+numpy
+python-socketio
+Pillow

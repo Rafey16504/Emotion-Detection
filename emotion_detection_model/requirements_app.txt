@@ -1,8 +1,0 @@
-flask
-flask-socketio
-opencv-python
-torch 
-torchvision
-eventlet
-gunicorn
-numpy
