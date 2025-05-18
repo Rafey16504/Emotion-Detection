@@ -1,10 +1,11 @@
-flask
-flask-socketio
+Flask
+Flask-Cors
+Flask-SocketIO
 torch
 torchvision
 opencv-python
 numpy
-python-socketio
 Pillow
 eventlet
-gunicorn
+python-socketio
+flask-cors

@@ -8,8 +8,11 @@ import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import io
+import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
@@ -247,4 +250,5 @@ def handle_frame(data):
 #--------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True, use_reloader=False)
