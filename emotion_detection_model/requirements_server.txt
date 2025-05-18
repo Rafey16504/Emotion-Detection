@@ -6,3 +6,5 @@ opencv-python
 numpy
 python-socketio
 Pillow
+eventlet
+gunicorn

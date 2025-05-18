@@ -16,6 +16,11 @@ socketio = SocketIO(
     async_mode='eventlet',
     max_http_buffer_size=10 * 1024 * 1024
 )
+
+#--------------------------------------------------------------------------------------------------------
+
+# Model class for emotion detection
+
 class EmotionCNN(nn.Module):
     def __init__(self, version=1):
         super(EmotionCNN, self).__init__()
@@ -157,7 +162,10 @@ class EmotionCNN(nn.Module):
         x = self.fc_layers(x)
         return x
 
+#--------------------------------------------------------------------------------------------------------
+
 # Load models
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model_configs = [("emotionDetector_1.pth", 1), ("emotionDetector_2.pth", 2), ("emotionDetector_3.pth", 3)]
 models = []
@@ -171,9 +179,16 @@ dummy = torch.randn(1, 1, 48, 48).to(device)
 with torch.no_grad():
     for m in models:
         m(dummy)
-        
+
+#--------------------------------------------------------------------------------------------------------
+
+# Emotion labels
+  
 labels = ['Anger', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
+#--------------------------------------------------------------------------------------------------------
+
+# Transformations
 
 transform = transforms.Compose([
     transforms.Resize((48, 48)),
@@ -181,7 +196,15 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
+#--------------------------------------------------------------------------------------------------------
+
+# Load Haar Cascade for face detection
+
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+#--------------------------------------------------------------------------------------------------------
+
+# SocketIO event handlers
 
 @socketio.on('process_frame')
 def handle_frame(data):
@@ -220,6 +243,8 @@ def handle_frame(data):
     except Exception as e:
         print(f"Error: {str(e)}")
         socketio.emit('error', {'message': 'Processing failed'})
+
+#--------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
