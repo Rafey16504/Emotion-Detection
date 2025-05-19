@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import io from "socket.io-client";
 
+
 const Detection = () => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [predictions, setPredictions] = useState<any[]>([]);
