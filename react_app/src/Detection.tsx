@@ -11,11 +11,13 @@ const Detection = () => {
   const [videoSize, setVideoSize] = useState({ width: 640, height: 480 });
 
   useEffect(() => {
-    socketRef.current = io("https://emotion-detection-txwz.onrender.com", {
-    transports: ["websocket"],  
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
-  });
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+    console.log("Connecting to backend at:", backendUrl);
+    socketRef.current = io(backendUrl, {
+      transports: ["websocket"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
     socketRef.current.on("predictions", (data: any) => {
       setPredictions(data);

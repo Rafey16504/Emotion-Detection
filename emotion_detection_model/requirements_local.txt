@@ -8,4 +8,3 @@ numpy
 Pillow
 eventlet
 python-socketio
-flask-cors
