@@ -11,7 +11,7 @@ const Detection = () => {
   const [videoSize, setVideoSize] = useState({ width: 640, height: 480 });
 
   useEffect(() => {
-    socketRef.current = io("https://emotion-detection-txwz.onrender.com ", {
+    socketRef.current = io("https://emotion-detection-txwz.onrender.com", {
     transports: ["websocket"],  
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
